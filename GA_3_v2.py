@@ -6,15 +6,9 @@ def mutation():
         if (probability <= mutationRate):
             mutation_num +=1
             chosen_num = np.random.randint(0,8) #chose gene
-            if(chosen_num == 0 ):
-                x[PS+taguchi_num+mutation_count] = x[i]
-                x[PS+taguchi_num+mutation_count,chosen_num] = np.random.uniform(100,10000)
-            elif (chosen_num <= 2):
-                x[PS+taguchi_num+mutation_count] = x[i]
-                x[PS+taguchi_num+mutation_count,chosen_num] = np.random.uniform(1000,10000)
-            else:
-                x[PS+taguchi_num+mutation_count] = x[i]
-                x[PS+taguchi_num+mutation_count,chosen_num] = np.random.uniform(10,1000)
+            chosen_cro = np.random.randint(0,PS+taguchi_num) #chose cromosome
+            x[PS+taguchi_num+mutation_count] = x[i]
+            x[PS+taguchi_num+mutation_count,chosen_num] = (x[i,chosen_num] + x[chosen_cro,chosen_num])*0.5
             
             mutation_count+=1
             
@@ -165,7 +159,7 @@ taguchi_xNum = PS*2
 taguchi_num = taguchi_xNum//2
 mutationRate = 0.1
 mutation_num=0
-iteration = 100000
+iteration = 1000
 keepRate = 0.8
 funcall = 0                        #number of function call
 global_min = 100000000.0
