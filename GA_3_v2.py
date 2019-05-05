@@ -102,6 +102,11 @@ def reproduction():
                 x[i] = x_tmp[j]
                 fit[i] = fit_tmp[j]
                 break
+    
+#    shuffle
+    dic = np.random.permutation(PS) #dictionary
+    x[:PS] = x[dic]
+    fit[:PS] = fit[dic]
 
 def sorting():
     global fit,x
@@ -151,13 +156,13 @@ import numpy as np
 from numpy import genfromtxt
 taguchi_chart = genfromtxt('123.csv', delimiter=',') 
 PS = 200                           #population size
-exPS = PS*3                        #extra population
+exPS = PS*4                        #extra population
 gene = 8                           #gene number
 w = 100000                         #penalty
 #corssoverRate = 0.5
 taguchi_xNum = PS*2
 taguchi_num = taguchi_xNum//2
-mutationRate = 0.1
+mutationRate = 0.5
 mutation_num=0
 iteration = 1000
 keepRate = 0.8
@@ -188,12 +193,17 @@ while(iteration > 0):
 
     for i in range(int(PS*keepRate), PS): #generate random cromosome untill 200 cromosomes
         x[i] = generate_Chromosomes()
+    
+    #    shuffle
+    dic = np.random.permutation(PS) #dictionary
+    x[:PS] = x[dic]
+    fit[:PS] = fit[dic]
+    
     x[PS:] = 10000.0
     fit[PS:] = 10000000.0
         
     tmp_min = np.min(fit)
-    
-    print('iter = ',iteration,tmp_min)
+#    print('iter = ',iteration,tmp_min)
     
     if(tmp_min<global_min):     #record best solution
         global_min = tmp_min
