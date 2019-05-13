@@ -1,11 +1,11 @@
 def mutation():
     global x,PS,mutation_num
     mutation_count =0
-    for i in range(PS+taguchi_num):
+    for i in range(PS,PS+taguchi_num):
         probability = np.random.uniform()
         if (probability <= mutationRate):
             mutation_num +=1
-            chosen_num = np.random.randint(0,8) #chose gene
+            chosen_num = np.random.randint(0,8)             #chose gene
             chosen_cro = np.random.randint(0,PS+taguchi_num) #chose cromosome
             x[PS+taguchi_num+mutation_count] = x[i]
             x[PS+taguchi_num+mutation_count,chosen_num] = (x[i,chosen_num] + x[chosen_cro,chosen_num])*0.5
@@ -23,20 +23,19 @@ def taguchi_method(x_tmp):
         fit_cro = np.zeros([16,2])
         x_cro[:] = x_tmp[i:i+2]
         
-        for j in range(16): #16 experiments
+        for j in range(16):                     #16 experiments
             for k in range(gene):
-                x_taguchi[j,k] = x_cro[int(taguchi_chart[j,k]) - 1, k]
-        fit_tmp = cal_fitness(x_taguchi, 16) #fitness of 16 experiments
+                x_taguchi[j,k] = x_cro[int(taguchi_chart[j,k])-1, k]
+        fit_tmp = cal_fitness(x_taguchi, 16)    #fitness of 16 experiments
         fit_cro[:16,0] = fit_tmp[:16]
         fit_cro[:16,1] = np.log(1/(fit_cro[:16,0]*fit_cro[:16,0]))
         
         #compaire
-#        taguchi_fitSum = np.zeros([3,8])
         taguchi_fitSum[2] = -10000
         x_new = np.zeros([1,gene])
         
-        for m in range(8): #levels for 8 gene
-            for n in range(16): #indices of levels
+        for m in range(8):                      #levels for 8 gene
+            for n in range(16):                 #indices of levels
                 if(taguchi_chart[n,m] == 1):
                     taguchi_fitSum[0,m] += fit_cro[n,1]
                 else:
@@ -64,15 +63,20 @@ def crossover():
     reproduction_probability = chosen_probability()
     x_tmp = np.zeros([taguchi_xNum, gene])
     
+    #select cromosomes for crossover
     x_tmp[0] = x_min
-    for i in range(1,PS): #select cromosomes for crossover
+    for i in range(2,PS,2):                       
+        x_tmp[i+1] = x[np.random.randint(PS)]
         probability = np.random.uniform()
-        for j in range(PS): #reproduction of probability
+        for j in range(PS):                     #reproduction of probability
             if (probability <= reproduction_probability[j]):
                 x_tmp[i] = x[j]
                 break
     
-    x_result,fit_result = taguchi_method(x_tmp)
+    #get taguchi result
+    x_result,fit_result = taguchi_method(x_tmp)  
+    
+    #saving crossover result
     x[PS:PS+len(x_result)] = x_result
     fit[PS:PS+len(fit_result)] = fit_result
     
@@ -80,11 +84,11 @@ def chosen_probability():
     global fit,PS
     
     fit_PS = fit[:PS]
-    reciprocal = np.reciprocal(fit_PS) #對每一fit取倒數
+    reciprocal = np.reciprocal(fit_PS)                          #對每一fit取倒數
 
-    reciprocalSum = np.sum(reciprocal, axis=0) #累加倒數
-    chosen_probability = reciprocal/reciprocalSum #計算選擇機率
-    reproduction_probability = chosen_probability.cumsum(axis=0) #累加選擇機率
+    reciprocalSum = np.sum(reciprocal, axis=0)                  #累加倒數
+    chosen_probability = reciprocal/reciprocalSum               #計算選擇機率
+    reproduction_probability = chosen_probability.cumsum(axis=0)#累加選擇機率
     return reproduction_probability
 
 def reproduction():
@@ -97,20 +101,20 @@ def reproduction():
     
     for i in range(1, PS):
         probability = np.random.uniform()
-        for j in range(PS): #reproduction of probability
+        for j in range(PS):                     #reproduction of probability
             if (probability <= reproduction_probability[j]):
                 x[i] = x_tmp[j]
                 fit[i] = fit_tmp[j]
                 break
     
 #    shuffle
-    dic = np.random.permutation(PS) #dictionary
+    dic = np.random.permutation(PS)             #dictionary
     x[:PS] = x[dic]
     fit[:PS] = fit[dic]
 
 def sorting():
     global fit,x
-    sort = np.argsort(fit) #indices list
+    sort = np.argsort(fit)                      #indices list
     fit = np.sort(fit)
     x_tmp = np.zeros([exPS, gene])
 
@@ -123,8 +127,8 @@ def cal_fitness(x, num):
     global w
     fit_tmp = np.zeros([num])
     for i in range(num):
-        unfeasibility = 0 #unfeasibility
-        c = np.zeros([6]) #memorize calculation of constraint
+        unfeasibility = 0                       #unfeasibility
+        c = np.zeros([6])                       #memorize calculation of constraint
         c[0] = 1 - 0.0025 * (x[i,3] + x[i,5])
         c[1] = 1 - 0.0025 * (x[i,4] + x[i,6] - x[i,3])
         c[2] = 1 - 0.01 * (x[i,7] - x[i,4])     
@@ -140,34 +144,34 @@ def cal_fitness(x, num):
         
     return fit_tmp
 
-def generate_Chromosomes():
-    x_1  = np.random.uniform(100,10000,1)
-    x_2_3 = np.random.uniform(1000,10000,2)
-    x_4_8 = np.random.uniform(10,1000,5)
-    x_com = np.concatenate((x_1,x_2_3,x_4_8)) #combine genes
-    x_com = np.around(x_com,decimals = 6)
+def generate_Chromosomes(num):
+    global gene
+    x_com = np.zeros([num,gene])
+    for i in range(num):
+        x_com[i,0]  = np.random.uniform(100,10000)
+        x_com[i,1:3] = np.random.uniform(1000,10000,2)
+        x_com[i,3:8] = np.random.uniform(10,1000,5)
     return x_com
 
 def initialization():
-    for i in range(PS):
-        x[i] = generate_Chromosomes()
+    x[:PS] = generate_Chromosomes(PS)
 
+'''global variables'''
 import numpy as np
 from numpy import genfromtxt
 taguchi_chart = genfromtxt('123.csv', delimiter=',') 
 PS = 200                           #population size
 exPS = PS*4                        #extra population
 gene = 8                           #gene number
-w = 100000                         #penalty
-#corssoverRate = 0.5
+w = 10000                          #penalty
 taguchi_xNum = PS*2
-taguchi_num = taguchi_xNum//2
-mutationRate = 0.5
-mutation_num=0
+taguchi_num = int(taguchi_xNum//2)
+mutationRate = 0.8
+mutation_num = 0
 iteration = 1000
-keepRate = 0.8
+keepRate = 0.3
 funcall = 0                        #number of function call
-global_min = 100000000.0
+global_min = 1000000.0
 
 x = np.full((exPS, gene), 10000.0) #cromosome
 fit = np.full((exPS),10000000.0)   #fitness
@@ -183,34 +187,46 @@ sorting()
 while(iteration > 0):
     if (iteration<900):
         keepRate = 0.02
-        
-    iteration -= 1
+    
     reproduction()
     crossover()
     mutation()
     fit = cal_fitness(x, exPS)
     sorting()
-
-    for i in range(int(PS*keepRate), PS): #generate random cromosome untill 200 cromosomes
-        x[i] = generate_Chromosomes()
     
-    #    shuffle
-    dic = np.random.permutation(PS) #dictionary
-    x[:PS] = x[dic]
-    fit[:PS] = fit[dic]
-    
-    x[PS:] = 10000.0
-    fit[PS:] = 10000000.0
+    if(iteration==1):
+        tmp_min = np.min(fit)
+        iteration -= 1
+        print('iter = ',iteration,tmp_min)
         
-    tmp_min = np.min(fit)
-#    print('iter = ',iteration,tmp_min)
-    
-    if(tmp_min<global_min):     #record best solution
-        global_min = tmp_min
-        x_min = x[0]
+        if(tmp_min<global_min):     #record best solution
+            global_min = tmp_min
+            x_min = x[0]
+        else:
+            x[2] = x_min
     else:
-        x[2] = x_min
+        #generate random cromosome untill 200 cromosomes
+        x[int(PS*keepRate):PS] = generate_Chromosomes(PS-int(PS*keepRate))
+        fit[:PS] = cal_fitness(x, PS) 
+        
+        #    shuffle
+        dic = np.random.permutation(PS) #dictionary
+        x[:PS] = x[dic]
+        fit[:PS] = fit[dic]
+        
+        x[PS:] = 10000.0
+        fit[PS:] = 10000000.0
+            
+        tmp_min = np.min(fit)
+        iteration -= 1
+        print('iter = ',iteration,tmp_min)
+        
+        if(tmp_min<global_min):     #record best solution
+            global_min = tmp_min
+            x_min = x[0]
+        else:
+            x[2] = x_min
     
+
 print(global_min)
-#answer 7049
-#mutation method
+#mutation method ofr taguchi
