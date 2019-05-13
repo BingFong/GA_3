@@ -1,16 +1,13 @@
 def mutation():
-    global x,PS,mutation_num
+    global x,PS,mutation_num,L,U
     mutation_count =0
     for i in range(PS,PS+taguchi_num):
-        probability = np.random.uniform()
-        if (probability <= mutationRate):
-            mutation_num +=1
-            chosen_num = np.random.randint(0,8)             #chose gene
-            chosen_cro = np.random.randint(0,PS+taguchi_num) #chose cromosome
-            x[PS+taguchi_num+mutation_count] = x[i]
-            x[PS+taguchi_num+mutation_count,chosen_num] = (x[i,chosen_num] + x[chosen_cro,chosen_num])*0.5
-            
-            mutation_count+=1
+        for j in range(0,gene):
+            probability = np.random.uniform()
+            if (probability <= mutationRate):
+                mutation_num +=1
+                x[PS+taguchi_num+mutation_count] = x[i]
+                x[PS+taguchi_num+mutation_count,j] = L[j]+ probability * (U[j] - L[j])
             
 def taguchi_method(x_tmp):
     global fit_cro,taguchi_fitSum,taguchi_xNum,taguchi_num
@@ -65,7 +62,14 @@ def crossover():
     
     #select cromosomes for crossover
     x_tmp[0] = x_min
-    for i in range(2,PS,2):                       
+    for i in range(1,PS):                       
+        probability = np.random.uniform()
+        for j in range(PS):                     #reproduction of probability
+            if (probability <= reproduction_probability[j]):
+                x_tmp[i] = x[j]
+                break
+            
+    for i in range(PS,PS*2,2):                       
         x_tmp[i+1] = x[np.random.randint(PS)]
         probability = np.random.uniform()
         for j in range(PS):                     #reproduction of probability
@@ -166,12 +170,14 @@ gene = 8                           #gene number
 w = 10000                          #penalty
 taguchi_xNum = PS*2
 taguchi_num = int(taguchi_xNum//2)
-mutationRate = 0.8
+mutationRate = 0.9
 mutation_num = 0
 iteration = 1000
-keepRate = 0.3
+keepRate = 0.1
 funcall = 0                        #number of function call
 global_min = 1000000.0
+L= np.array([100,1000,1000,10,10,10,10,10])
+U = np.array([10000,100000,100000,1000,1000,1000,1000,1000])
 
 x = np.full((exPS, gene), 10000.0) #cromosome
 fit = np.full((exPS),10000000.0)   #fitness
@@ -203,7 +209,7 @@ while(iteration > 0):
             global_min = tmp_min
             x_min = x[0]
         else:
-            x[2] = x_min
+            x[0] = x_min
     else:
         #generate random cromosome untill 200 cromosomes
         x[int(PS*keepRate):PS] = generate_Chromosomes(PS-int(PS*keepRate))
